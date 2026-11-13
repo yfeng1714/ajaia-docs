@@ -31,6 +31,7 @@ export type SaveController = {
 };
 
 function syncGuard(controller: SaveController) {
+  if (controller.ignoreRef.current) return;
   setUnsavedWork(controller.dirtyRef.current);
   setSaveInFlight(controller.savingRef.current);
 }
@@ -77,10 +78,7 @@ export async function runDocumentSave(controller: SaveController): Promise<void>
   });
 
   controller.savingRef.current = false;
-  if (controller.ignoreRef.current) {
-    setSaveInFlight(false);
-    return;
-  }
+  if (controller.ignoreRef.current) return;
   if (!result.ok) {
     controller.dirtyRef.current = true;
     syncGuard(controller);

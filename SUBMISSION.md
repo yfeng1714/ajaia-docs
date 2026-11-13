@@ -11,13 +11,13 @@
 
 ## Checked
 
-- Locally: create, rename, rich-text edit, autosave, refresh, `.txt` import, share, and a blocked third person. `npm test` passed 7 tests. `npm run lint` and `npm run build` passed.
-- On the live URL, without a Vercel login: the page loads, Alex can create and save a bold heading, reopening returns that text, Sam can open the shared document, and Lee receives "not available."
+- Locally: create, rename, rich-text edit, autosave, refresh, `.txt` import, share, and a blocked third person. `npm test` passed 14 tests, covering those server rules plus the editor save-guard cases. Lint and `npm run build` passed on the submitted commit.
+- On the live URL, without a Vercel login: the page loads, Alex can create and save a bold heading, reopening returns that text, Sam can open the shared document, and Lee receives "not available." Nested lists save and remain after refresh.
 
 ## Not included yet
 
-- A walkthrough video. `WALKTHROUGH_URL.txt` should be added after the recording exists.
-- A Google Drive folder. The files above are the contents that folder should hold, plus the live URL and video link once they exist.
+- A walkthrough video. `docs/WALKTHROUGH_SCRIPT.md` is the four-minute script. `WALKTHROUGH_URL.txt` should be added after the recording exists.
+- A Google Drive folder. Copy this repository's source archive, the README, architecture note, AI note, this file, `LIVE_URL.txt`, and the video link into that folder.
 
 ## Known limits
 
