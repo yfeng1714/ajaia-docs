@@ -79,4 +79,6 @@ npm run build
 
 https://ajaia-docs-omega-taupe.vercel.app
 
-The hosted app uses Vercel Hobby and Neon Free. No Vercel login is required. The same three demo people work there. A document named "Live check" was created while verifying the deployment; Alex owns it and Sam can edit it.
+Source: https://github.com/yfeng1714/ajaia-docs
+
+Pushes to `main` deploy this Vercel project. The hosted app uses Vercel Hobby and Neon Free. No Vercel login is required. The same three demo people work there. A document named "Live check" was created while verifying the deployment; Alex owns it and Sam can edit it.
