@@ -21,4 +21,4 @@ The implementation was done in Cursor with the Grok 4.7 coding agent. Planning n
 - `npm test`: 7 tests passed, including access before and after a share, a denied third user, a stale save, and import rejection.
 - `npm run lint` passed after the editor page stopped returning markup from inside a `try/catch`.
 - The app was exercised in a browser: create, rename, format, refresh, share, switch person, deny an unshared person, reject a non-`.txt` file, and import a text file.
-- A hosted URL is not claimed here until a deployment has been opened in a clean browser session.
+- A hosted URL is published at https://ajaia-docs-omega-taupe.vercel.app on Vercel Hobby with Neon Free. A clean request, with no Vercel cookie, loaded the app. Creating a document, saving a bold heading, reopening it, sharing it with Sam, and blocking Lee were checked against that database.

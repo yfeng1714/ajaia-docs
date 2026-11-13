@@ -77,4 +77,6 @@ npm run build
 
 ## Live app
 
-Deployment is not published yet. This file will be updated with the reviewer URL when a hosted database is connected.
+https://ajaia-docs-omega-taupe.vercel.app
+
+The hosted app uses Vercel Hobby and Neon Free. No Vercel login is required. The same three demo people work there. A document named "Live check" was created while verifying the deployment; Alex owns it and Sam can edit it.
