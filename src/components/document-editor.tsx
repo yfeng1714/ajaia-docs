@@ -1,40 +1,22 @@
 "use client";
 
-import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client/api";
-import { cancelEditSession, getEditorDirty, registerEditSession, setEditorDirty } from "@/lib/client/dirty";
+import { runDocumentSave, type SaveStatus } from "@/lib/client/document-save";
+import {
+  cancelEditSession,
+  getEditorDirty,
+  registerEditSession,
+  setUnsavedWork,
+} from "@/lib/client/dirty";
 import type { EditorDoc } from "@/lib/content";
+import { createEditorExtensions } from "@/lib/editor-extensions";
 import { formatTimestamp } from "@/lib/format";
 import type { DocumentDetail, ShareCandidate } from "@/lib/types";
 import { ShareDialog } from "./share-dialog";
 
-type SaveStatus =
-  | { kind: "saved"; updatedAt: string }
-  | { kind: "dirty" }
-  | { kind: "saving" }
-  | { kind: "error"; message: string }
-  | { kind: "conflict"; message: string };
-
 const AUTOSAVE_MS = 700;
-
-function createExtensions() {
-  return [
-    StarterKit.configure({
-      heading: { levels: [1, 2] },
-      link: false,
-      strike: false,
-      code: false,
-      codeBlock: false,
-      blockquote: false,
-      horizontalRule: false,
-      trailingNode: false,
-    }),
-    Placeholder.configure({ placeholder: "Write something worth sharing…" }),
-  ];
-}
 
 export function DocumentEditor({
   doc,
@@ -52,22 +34,31 @@ export function DocumentEditor({
   const dirtyRef = useRef(false);
   const savingRef = useRef(false);
   const ignoreRef = useRef(false);
+  const pausedRef = useRef(false);
   const timerRef = useRef<number | null>(null);
   const statusRef = useRef<SaveStatus>(status);
   const saveRef = useRef<() => Promise<void>>(async () => {});
   const onChangeRef = useRef<(content: EditorDoc) => void>(() => {});
-  statusRef.current = status;
+
+  useEffect(() => {
+    statusRef.current = status;
+    saveRef.current = save;
+    onChangeRef.current = (content) => {
+      contentRef.current = content;
+      markDirty();
+    };
+  });
 
   function markDirty() {
     if (ignoreRef.current || statusRef.current.kind === "conflict") {
       dirtyRef.current = true;
-      setEditorDirty(true);
+      setUnsavedWork(true);
       return;
     }
     dirtyRef.current = true;
-    setEditorDirty(true);
+    setUnsavedWork(true);
     setStatus({ kind: "dirty" });
-    if (savingRef.current) return;
+    if (savingRef.current || pausedRef.current) return;
     if (timerRef.current) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null;
@@ -76,72 +67,32 @@ export function DocumentEditor({
   }
 
   async function save() {
-    if (ignoreRef.current || statusRef.current.kind === "conflict") return;
-    if (savingRef.current) {
-      dirtyRef.current = true;
-      return;
-    }
-    if (!dirtyRef.current) return;
-    if (doc.canRename) {
-      const trimmed = titleRef.current.trim();
-      if (!trimmed || trimmed.length > 120) {
-        dirtyRef.current = true;
-        setEditorDirty(true);
-        setStatus({
-          kind: "error",
-          message: trimmed ? "Titles can be at most 120 characters." : "Give the document a title.",
+    await runDocumentSave({
+      documentId: doc.id,
+      canRename: doc.canRename,
+      titleRef,
+      contentRef,
+      revisionRef,
+      dirtyRef,
+      savingRef,
+      ignoreRef,
+      pausedRef,
+      timerRef,
+      getStatus: () => statusRef.current.kind,
+      setStatus,
+      setTitle,
+      send: async (body) => {
+        const result = await api<{ document: DocumentDetail }>(`/api/documents/${doc.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
         });
-        return;
-      }
-    }
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    savingRef.current = true;
-    dirtyRef.current = false;
-    setEditorDirty(false);
-    setStatus({ kind: "saving" });
-    const result = await api<{ document: DocumentDetail }>(`/api/documents/${doc.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        expectedRevision: revisionRef.current,
-        content: contentRef.current,
-        ...(doc.canRename ? { title: titleRef.current } : {}),
-      }),
+        if (!result.ok) return { ok: false, error: result.error, code: result.code };
+        return { ok: true, data: { document: result.data.document } };
+      },
     });
-    savingRef.current = false;
-    if (ignoreRef.current) return;
-    if (!result.ok) {
-      dirtyRef.current = true;
-      setEditorDirty(true);
-      setStatus(
-        result.code === "stale_revision"
-          ? { kind: "conflict", message: result.error }
-          : { kind: "error", message: result.error },
-      );
-      return;
-    }
-    revisionRef.current = result.data.document.revision;
-    if (doc.canRename) {
-      titleRef.current = result.data.document.title;
-      setTitle(result.data.document.title);
-    }
-    if (dirtyRef.current) {
-      await save();
-      return;
-    }
-    setEditorDirty(false);
-    setStatus({ kind: "saved", updatedAt: result.data.document.updatedAt });
   }
 
-  saveRef.current = save;
-  onChangeRef.current = (content) => {
-    contentRef.current = content;
-    markDirty();
-  };
-
-  const extensions = useMemo(() => createExtensions(), []);
+  const extensions = useMemo(() => createEditorExtensions(), []);
   const editor = useEditor({
     extensions,
     content: doc.content,
@@ -161,9 +112,25 @@ export function DocumentEditor({
 
   useEffect(() => {
     ignoreRef.current = false;
-    const unregister = registerEditSession(() => {
-      ignoreRef.current = true;
-      if (timerRef.current) window.clearTimeout(timerRef.current);
+    pausedRef.current = false;
+    const unregister = registerEditSession({
+      pause: () => {
+        pausedRef.current = true;
+        if (timerRef.current) window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      },
+      resume: () => {
+        pausedRef.current = false;
+        if (dirtyRef.current && !savingRef.current && !ignoreRef.current && statusRef.current.kind !== "conflict") {
+          void saveRef.current();
+        }
+      },
+      cancel: () => {
+        ignoreRef.current = true;
+        pausedRef.current = true;
+        if (timerRef.current) window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      },
     });
     function onBeforeUnload(event: BeforeUnloadEvent) {
       if (!getEditorDirty()) return;
@@ -190,7 +157,7 @@ export function DocumentEditor({
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       unregister();
-      setEditorDirty(false);
+      setUnsavedWork(false);
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.document.removeEventListener("click", onClick, true);
     };
@@ -216,7 +183,7 @@ export function DocumentEditor({
             onSave={() => {
               if (statusRef.current.kind === "conflict") return;
               dirtyRef.current = true;
-              setEditorDirty(true);
+              setUnsavedWork(true);
               void saveRef.current();
             }}
           />
@@ -283,7 +250,7 @@ export function DocumentEditor({
               className="button button-secondary"
               onClick={() => {
                 dirtyRef.current = true;
-                setEditorDirty(true);
+                setUnsavedWork(true);
                 void saveRef.current();
               }}
             >

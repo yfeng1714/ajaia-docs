@@ -36,11 +36,13 @@ docker compose up -d
 
 That starts Postgres on port 5433 with user `ajaia`, password `ajaia`, database `ajaia_docs`, and also creates `ajaia_docs_test`.
 
-3. Copy the environment file if you are not using those Docker defaults.
+3. Create the local environment file. These values match the Docker Compose defaults above.
 
 ```bash
 cp .env.example .env
 ```
+
+Edit `.env` only when your database host, port, user, or password differ. A hosted process can set `DATABASE_URL` in the environment instead of using this file. `npm run db:setup` uses `DATABASE_URL_UNPOOLED` when that variable is present, and otherwise `DATABASE_URL`.
 
 4. Create the tables and demo people.
 

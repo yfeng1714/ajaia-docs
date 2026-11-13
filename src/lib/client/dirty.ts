@@ -1,29 +1,48 @@
-let dirty = false;
-let cancelPending: (() => void) | null = null;
+let unsaved = false;
+let inFlight = false;
 
-export function setEditorDirty(value: boolean) {
-  dirty = value;
+type EditSession = {
+  pause: () => void;
+  resume: () => void;
+  cancel: () => void;
+};
+
+let session: EditSession | null = null;
+
+export function setUnsavedWork(value: boolean) {
+  unsaved = value;
+}
+
+export function setSaveInFlight(value: boolean) {
+  inFlight = value;
 }
 
 export function getEditorDirty() {
-  return dirty;
+  return unsaved || inFlight;
 }
 
-export function registerEditSession(cancel: () => void) {
-  cancelPending = cancel;
+export function registerEditSession(next: EditSession) {
+  session = next;
   return () => {
-    if (cancelPending === cancel) cancelPending = null;
+    if (session === next) session = null;
   };
 }
 
-export function cancelEditSession() {
-  cancelPending?.();
-  dirty = false;
+export function pauseEditing() {
+  session?.pause();
 }
 
-export function confirmDiscard(message: string) {
-  if (!dirty) return true;
-  const ok = window.confirm(message);
-  if (ok) cancelEditSession();
-  return ok;
+export function resumeEditing() {
+  session?.resume();
+}
+
+export function cancelEditSession() {
+  session?.cancel();
+  unsaved = false;
+  inFlight = false;
+}
+
+export function confirmLeave(message: string) {
+  if (!getEditorDirty()) return true;
+  return window.confirm(message);
 }

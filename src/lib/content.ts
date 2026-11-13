@@ -21,7 +21,7 @@ const TOP_LEVEL = new Set(["paragraph", "heading", "bulletList", "orderedList"])
 const MARKS = new Set(["bold", "italic", "underline"]);
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
   heading: new Set(["level"]),
-  orderedList: new Set(["start"]),
+  orderedList: new Set(["start", "type"]),
 };
 
 export function emptyDoc(): EditorDoc {
@@ -158,14 +158,16 @@ function validateChildTypes(node: EditorNode, parent: string) {
     return childrenAllowed(node, new Set(["text", "hardBreak"]));
   }
   if (node.type === "bulletList" || node.type === "orderedList") {
-    if (parent !== "doc") return "The document contains formatting that cannot be saved.";
+    if (parent !== "doc" && parent !== "listItem") {
+      return "The document contains formatting that cannot be saved.";
+    }
     return childrenAllowed(node, new Set(["listItem"]));
   }
   if (node.type === "listItem") {
     if (parent !== "bulletList" && parent !== "orderedList") {
       return "The document contains formatting that cannot be saved.";
     }
-    return childrenAllowed(node, new Set(["paragraph"]));
+    return childrenAllowed(node, new Set(["paragraph", "bulletList", "orderedList"]));
   }
   return "The document contains formatting that cannot be saved.";
 }
@@ -197,6 +199,11 @@ function validateAttrs(node: EditorNode) {
   if (node.type === "orderedList" && record.start !== undefined) {
     const start = record.start;
     if (typeof start !== "number" || !Number.isInteger(start) || start < 1 || start > 9999) {
+      return "The numbered list cannot be saved.";
+    }
+  }
+  if (node.type === "orderedList" && record.type != null) {
+    if (typeof record.type !== "string" || !["1", "a", "A", "i", "I"].includes(record.type)) {
       return "The numbered list cannot be saved.";
     }
   }

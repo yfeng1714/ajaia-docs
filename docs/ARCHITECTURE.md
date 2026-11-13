@@ -31,9 +31,11 @@ The word Saved appears only after a successful response.
 
 The server checks the `.txt` extension, a 256 KB limit, and UTF-8. Null bytes and invalid encodings are rejected. Lines become paragraphs. Nothing in the file is parsed as HTML.
 
-## Deployment shape
+## Deployment
 
-`npm start` migrates, makes sure the demo people exist, and then starts Next.js. A hosted Postgres connection string is the only required environment variable: `DATABASE_URL`.
+The public app is https://ajaia-docs-omega-taupe.vercel.app. Vercel Hobby builds the Next.js app with `npm run build` and serves that output. It does not run `npm start`. The database is the existing Neon Free project. The app uses the pooled `DATABASE_URL`. Migrations and the demo-user seed were applied separately with `npm run db:setup`, which prefers `DATABASE_URL_UNPOOLED` so schema changes do not go through the connection pooler. That command is idempotent and does not delete documents. `npm start` is only the self-hosted path: it runs the same setup, then `next start`.
+
+Pushes to `main` on https://github.com/yfeng1714/ajaia-docs deploy this Vercel project.
 
 ## What this version leaves out
 
