@@ -21,7 +21,8 @@ The implementation was done in Cursor with the Grok 4.7 coding agent. Planning n
 Implementer checks, separate from the planning notes and the later reviews:
 
 - The first local pass recorded 7 passing tests for access, stale saves, and import rejection. That count is historical.
-- After the review fixes, `npm test` passes 14 tests: access, import, editor-produced nested lists, the title-save race, in-flight navigation protection, failed identity-switch recovery, and a discarded document's late response leaving the next document's save guard in place.
+- After the review fixes, the suite had 14 tests for access, import, nested lists, the title-save race, in-flight navigation protection, failed identity-switch recovery, and a discarded document's late response. That count is the pre-download suite.
+- The current `npm test` passes 17 tests. The three added tests cover Markdown export of formatted and nested text, escaping of literal markup, filename cleanup, and release of the temporary download link.
 - `npm run lint` passed after the editor page stopped returning markup from inside a `try/catch`.
 - The app was exercised in a browser: create, rename, format, refresh, share, switch person, deny an unshared person, reject a non-`.txt` file, and import a text file.
 - A hosted URL is published at https://ajaia-docs-omega-taupe.vercel.app on Vercel Hobby with Neon Free. A clean request, with no Vercel cookie, loaded the app. Creating a document, saving a bold heading, reopening it, sharing it with Sam, and blocking Lee were checked against that database. Nested lists were checked again on the live app during review.

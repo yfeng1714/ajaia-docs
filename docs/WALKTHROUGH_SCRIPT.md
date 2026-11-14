@@ -12,6 +12,8 @@ Say this is a small shared document editor, not a full Google Docs clone. Point 
 
 Click New document. Rename it. Use the toolbar for a heading, bold, italic, underline, and a bullet list. Indent one bullet with Tab. Wait until the status says Saved, then refresh and show the formatting is still there.
 
+Click Download Markdown and open the file for about ten seconds. Say it is the draft on this computer, not another save. Underline shows up as HTML because Markdown has no underline mark.
+
 Click Import .txt and choose `examples/meeting-notes.txt`, or any small UTF-8 text file. Mention that only `.txt` files up to 256 KB are accepted, and that text is kept as typed.
 
 ## 1:30–2:30 — Share and the access boundary
@@ -24,7 +26,7 @@ Switch to Lee and open the same document link, or stay on it. Lee sees that the 
 
 Say the app is Next.js with Postgres on Neon, deployed on Vercel. The server stores editor JSON and checks ownership. A save only lands if it still matches the stored revision, so two tabs cannot silently overwrite each other.
 
-Say what is intentionally missing: no real accounts, no live cursors, no comments, no version history, and no export. Shared edits show up after refresh.
+Say what is intentionally missing: no real accounts, no live cursors, no comments, no version history, and no PDF export. Markdown download is only a local copy of the draft. Shared edits show up after refresh.
 
 ## 3:15–4:00 — AI use and checks
 

@@ -434,6 +434,8 @@ h1, h2, p { margin-top: 0; }
 
 .form-error { color: var(--danger); margin: 0; }
 
+.download-error { margin-top: 8px; }
+
 .share-dialog {
   width: min(32rem, calc(100% - 32px));
   border: 1px solid var(--line);

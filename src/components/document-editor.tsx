@@ -4,6 +4,7 @@ import Link from "next/link";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client/api";
+import { downloadTextFile } from "@/lib/client/download-text";
 import { runDocumentSave, type SaveStatus } from "@/lib/client/document-save";
 import {
   cancelEditSession,
@@ -12,6 +13,7 @@ import {
   setUnsavedWork,
 } from "@/lib/client/dirty";
 import type { EditorDoc } from "@/lib/content";
+import { documentToMarkdown, markdownFilename } from "@/lib/export-markdown";
 import { createEditorExtensions } from "@/lib/editor-extensions";
 import type { DocumentDetail, ShareCandidate } from "@/lib/types";
 import { LocalTime } from "./local-time";
@@ -29,6 +31,7 @@ export function DocumentEditor({
   const [title, setTitle] = useState(doc.title);
   const [status, setStatus] = useState<SaveStatus>({ kind: "saved", updatedAt: doc.updatedAt });
   const [shareOpen, setShareOpen] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const titleRef = useRef(doc.title);
   const contentRef = useRef<EditorDoc>(doc.content);
   const revisionRef = useRef(doc.revision);
@@ -143,7 +146,7 @@ export function DocumentEditor({
       const target = event.target;
       if (!(target instanceof Element)) return;
       const link = target.closest("a");
-      if (!link || link.target === "_blank") return;
+      if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
       const href = link.getAttribute("href");
       if (!href || href.startsWith("#")) return;
       if (!window.confirm("You have unsaved changes. Leave this document without saving them?")) {
@@ -230,6 +233,25 @@ export function DocumentEditor({
             >
               Save
             </button>
+            <button
+              type="button"
+              className="button button-secondary"
+              disabled={!editor}
+              title="Downloads the current draft."
+              onClick={() => {
+                try {
+                  setDownloadError(null);
+                  downloadTextFile(
+                    markdownFilename(titleRef.current),
+                    documentToMarkdown(titleRef.current, contentRef.current),
+                  );
+                } catch {
+                  setDownloadError("The draft could not be downloaded.");
+                }
+              }}
+            >
+              Download Markdown
+            </button>
             {doc.canShare ? (
               <button type="button" className="button" onClick={() => setShareOpen(true)}>
                 Share
@@ -237,6 +259,11 @@ export function DocumentEditor({
             ) : null}
           </div>
         </div>
+        {downloadError ? (
+          <p className="form-error download-error" role="alert">
+            {downloadError}
+          </p>
+        ) : null}
         {status.kind === "conflict" ? (
           <div className="banner banner-warning" role="alert">
             <p>{status.message}</p>

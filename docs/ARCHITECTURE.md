@@ -27,6 +27,10 @@ The editor waits briefly, then sends the title (owners only), the JSON body, and
 
 The word Saved appears only after a successful response.
 
+## Download
+
+Download Markdown builds a UTF-8 file in the browser from the title and editor JSON currently on screen. It does not call the server, change the revision, or clear an unsaved-work warning. Underline is emitted as `<u>` because CommonMark has no underline mark. Literal `<`, `>`, and `&` in the writing are escaped, so only those generated underline tags are raw HTML.
+
 ## Import
 
 The server checks the `.txt` extension, a 256 KB limit, and UTF-8. Null bytes and invalid encodings are rejected. Lines become paragraphs. Nothing in the file is parsed as HTML.
@@ -39,7 +43,7 @@ Pushes to `main` on https://github.com/yfeng1714/ajaia-docs deploy this Vercel p
 
 ## What this version leaves out
 
-There is no real-time collaboration, comments, version history, export, or public share link. Shared edits show up after the other person reopens or refreshes the document. Identity is a demo switcher, not authentication.
+There is no real-time collaboration, comments, version history, PDF export, or public share link. Markdown download is a local copy of the current draft. Shared edits show up after the other person reopens or refreshes the document. Identity is a demo switcher, not authentication.
 
 ## Next 2–4 hours
 

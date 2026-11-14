@@ -14,6 +14,10 @@ There is no password. Choose a person in the header. Anyone with the app can swi
 
 The owner can rename a document and choose who else can edit it. A person with access can edit the text. Anyone else who opens the link is told the document is not available.
 
+## Download
+
+Anyone who can open a document can download the current draft as a UTF-8 Markdown file, including edits that have not been saved yet. Downloading does not save the document or change who can edit it. Underline is written as `<u>` because Markdown has no underline syntax, and some viewers hide that HTML. Literal characters such as `*`, `#`, and `<` stay as typed text.
+
 ## What you can import
 
 UTF-8 `.txt` files up to 256 KB. The file becomes a new document owned by the current person. Line breaks become paragraphs. The text is kept as typed, including characters that look like HTML. Other file types are rejected.

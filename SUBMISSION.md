@@ -11,8 +11,8 @@
 
 ## Checked
 
-- Locally: create, rename, rich-text edit, autosave, refresh, `.txt` import, share, and a blocked third person. `npm test` passed 14 tests, covering those server rules plus the editor save-guard cases. Lint and `npm run build` passed on the submitted commit.
-- On the live URL, without a Vercel login: the page loads, Alex can create and save a bold heading, reopening returns that text, Sam can open the shared document, and Lee receives "not available." Nested lists save and remain after refresh.
+- Locally: create, rename, rich-text edit, autosave, refresh, `.txt` import, share, and a blocked third person. `npm test` passed 17 tests, covering those server rules, the editor save-guard cases, and Markdown export of the current draft. Lint and `npm run build` passed on the submitted commit.
+- On the live URL, without a Vercel login: the page loads, Alex can create and save a bold heading, reopening returns that text, Sam can open the shared document, and Lee receives "not available." Nested lists save and remain after refresh. Markdown download was checked locally against the current draft, including an edit that had not finished saving.
 
 ## Not included yet
 
@@ -25,3 +25,4 @@
 - Two people do not see each other's cursors. The second person sees edits after refresh.
 - Only `.txt` import, up to 256 KB.
 - If a save loses a revision race, the local text stays on screen and must be reloaded before it can be saved again.
+- Markdown download is the current draft. Underline is `<u>` HTML, which some viewers do not show. There is no PDF export.
