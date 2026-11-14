@@ -44,17 +44,19 @@ export function LibraryActions() {
 
   return (
     <div className="actions">
-      <button type="button" className="button" onClick={() => void createDocument()} disabled={pending !== null}>
-        {pending === "create" ? "Creating…" : "New document"}
-      </button>
-      <button
-        type="button"
-        className="button button-secondary"
-        onClick={() => inputRef.current?.click()}
-        disabled={pending !== null}
-      >
-        {pending === "import" ? "Importing…" : "Import .txt"}
-      </button>
+      <div className="action-buttons">
+        <button type="button" className="button" onClick={() => void createDocument()} disabled={pending !== null}>
+          {pending === "create" ? "Creating…" : "New document"}
+        </button>
+        <button
+          type="button"
+          className="button button-secondary"
+          onClick={() => inputRef.current?.click()}
+          disabled={pending !== null}
+        >
+          {pending === "import" ? "Importing…" : "Import .txt"}
+        </button>
+      </div>
       <input
         ref={inputRef}
         className="sr-only"

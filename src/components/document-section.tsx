@@ -1,32 +1,39 @@
 import Link from "next/link";
-import { formatTimestamp } from "@/lib/format";
+import { LocalTime } from "@/components/local-time";
 import type { DocumentSummary } from "@/lib/types";
 
 export function DocumentSection({
   title,
   empty,
   documents,
-  shared = false,
 }: {
   title: string;
   empty: string;
   documents: DocumentSummary[];
-  shared?: boolean;
 }) {
   return (
     <section className="doc-section">
-      <h2>{title}</h2>
+      <h2>
+        {title}
+        <span className="section-count">{documents.length}</span>
+      </h2>
       {documents.length === 0 ? (
         <p className="empty">{empty}</p>
       ) : (
         <div className="doc-list">
           {documents.map((document) => (
             <Link key={document.id} href={`/documents/${document.id}`} className="doc-row">
-              <span>
+              <span className="doc-row-copy">
                 <strong>{document.title}</strong>
-                <small>{shared ? `From ${document.ownerName}` : "You own this"}</small>
+                <span className="doc-meta">
+                  <span>
+                    Owner: {document.ownerName}
+                    {document.role === "owner" ? " (you)" : ""}
+                  </span>
+                  {document.role === "editor" ? <span className="badge">Can edit</span> : null}
+                </span>
               </span>
-              <time dateTime={document.updatedAt}>{formatTimestamp(document.updatedAt)}</time>
+              <LocalTime iso={document.updatedAt} />
             </Link>
           ))}
         </div>

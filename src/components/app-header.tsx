@@ -12,6 +12,7 @@ export function AppHeader({
   people: PublicUser[];
 }) {
   const { selectUser, error, pendingId } = useSelectUser();
+  const shownId = pendingId ?? currentUser?.id ?? "";
 
   return (
     <header className="topbar">
@@ -20,25 +21,30 @@ export function AppHeader({
         <span>Shared writing</span>
       </Link>
       <div className="identity">
-        <div>
-          <p className="eyebrow">Viewing as</p>
-          <p className="hint">Public demo. No password.</p>
-        </div>
-        <div className="identity-options" role="group" aria-label="Demo user">
-          {people.map((person) => (
-            <button
-              key={person.id}
-              type="button"
-              aria-pressed={currentUser?.id === person.id}
-              disabled={pendingId !== null}
-              onClick={() => {
-                if (person.id !== currentUser?.id) void selectUser(person.id);
-              }}
-            >
-              {person.displayName}
-            </button>
-          ))}
-        </div>
+        <label className="demo-user">
+          <span id="demo-user-label">Demo user</span>
+          <select
+            aria-labelledby="demo-user-label"
+            aria-describedby="demo-user-note"
+            value={shownId}
+            disabled={pendingId !== null || people.length === 0}
+            onChange={(event) => {
+              const next = event.target.value;
+              event.currentTarget.value = shownId;
+              if (next && next !== currentUser?.id) void selectUser(next);
+            }}
+          >
+            {currentUser ? null : <option value="">Choose</option>}
+            {people.map((person) => (
+              <option key={person.id} value={person.id}>
+                {person.displayName}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p id="demo-user-note" className="hint identity-note">
+          Public demo. No password.
+        </p>
         {error ? <p className="form-error">{error}</p> : null}
       </div>
     </header>

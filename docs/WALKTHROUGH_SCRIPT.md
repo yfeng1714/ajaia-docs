@@ -6,7 +6,7 @@ Demo people, no passwords: Alex Morgan, Sam Patel, and Lee Chen.
 
 ## 0:00–0:25 — What this is
 
-Say this is a small shared document editor, not a full Google Docs clone. Point at the header: three seeded people, public demo, no password. You are starting as Alex.
+Say this is a small shared document editor, not a full Google Docs clone. Point at the header: the Demo user menu, public demo, no password. You are starting as Alex.
 
 ## 0:25–1:30 — Create, format, save, refresh, import
 
@@ -16,7 +16,7 @@ Click Import .txt and choose `examples/meeting-notes.txt`, or any small UTF-8 te
 
 ## 1:30–2:30 — Share and the access boundary
 
-Open Share and give Sam Patel access. Switch to Sam. Show the document under Shared with me, edit a line, and wait for Saved. Switch back to Alex, refresh, and show Sam's text.
+Open Share and give Sam Patel access. Switch to Sam with the Demo user menu. Show the document under Shared with you, edit a line, and wait for Saved. Use ← All documents to return, switch back to Alex, refresh, and show Sam's text.
 
 Switch to Lee and open the same document link, or stay on it. Lee sees that the document is not available.
 

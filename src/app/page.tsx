@@ -18,20 +18,19 @@ export default async function HomePage() {
       <div className="library-head">
         <div>
           <h1>Documents</h1>
-          <p className="lede">Documents you own stay separate from documents shared with you.</p>
+          <p className="lede">Create, import and share documents.</p>
         </div>
         <LibraryActions />
       </div>
       <DocumentSection
-        title="Owned by you"
+        title="Your documents"
         empty="You have not created a document yet. Start one, or import a .txt file."
         documents={library.owned}
       />
       <DocumentSection
-        title="Shared with me"
-        empty="No one has shared a document with you yet."
+        title="Shared with you"
+        empty="No documents have been shared with you yet."
         documents={library.shared}
-        shared
       />
     </div>
   );

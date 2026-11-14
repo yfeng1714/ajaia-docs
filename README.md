@@ -72,8 +72,8 @@ npm run build
 
 ## Sharing rules
 
-- Documents you own are listed under **Owned by you**.
-- Documents another person shared with you are listed under **Shared with me**.
+- Documents you own are listed under **Your documents**, with `Owner: Your Name (you)`.
+- Documents another person shared with you are listed under **Shared with you**, with that person's name and a `Can edit` badge.
 - Saves are acknowledged only after Postgres stores them.
 - If someone else saves the same document first, your copy stays on screen and the page tells you to reload before those edits can be saved.
 

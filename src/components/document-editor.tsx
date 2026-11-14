@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client/api";
@@ -12,8 +13,8 @@ import {
 } from "@/lib/client/dirty";
 import type { EditorDoc } from "@/lib/content";
 import { createEditorExtensions } from "@/lib/editor-extensions";
-import { formatTimestamp } from "@/lib/format";
 import type { DocumentDetail, ShareCandidate } from "@/lib/types";
+import { LocalTime } from "./local-time";
 import { ShareDialog } from "./share-dialog";
 
 const AUTOSAVE_MS = 700;
@@ -163,34 +164,72 @@ export function DocumentEditor({
     };
   }, []);
 
-  const statusLabel =
+  const statusText =
     status.kind === "saving"
       ? "Saving…"
       : status.kind === "dirty"
         ? "Unsaved changes"
-        : status.kind === "saved"
-          ? `Saved ${formatTimestamp(status.updatedAt)}`
-          : status.kind === "conflict"
-            ? "Newer version saved"
-            : "Couldn't save";
+        : status.kind === "conflict"
+          ? "Newer version saved"
+          : status.kind === "error"
+            ? "Couldn't save"
+            : null;
 
   return (
     <div className="workspace">
       <div className="sheet">
-        <div className="sheet-toolbar">
-          <Toolbar
-            editor={editor}
-            onSave={() => {
-              if (statusRef.current.kind === "conflict") return;
-              dirtyRef.current = true;
-              setUnsavedWork(true);
-              void saveRef.current();
-            }}
-          />
-          <div className="sheet-meta">
-            <p className="save-state" data-save-state={status.kind} aria-live="polite">
-              {statusLabel}
+        <Link href="/" className="back-link">
+          ← All documents
+        </Link>
+        <div className="doc-heading">
+          <div className="doc-heading-main">
+            {doc.canRename ? (
+              <input
+                id="document-title"
+                className="title-input"
+                aria-label="Document title"
+                value={title}
+                maxLength={120}
+                onChange={(event) => {
+                  titleRef.current = event.target.value;
+                  setTitle(event.target.value);
+                  markDirty();
+                }}
+              />
+            ) : (
+              <h1 className="title-display">{doc.title}</h1>
+            )}
+            <p className="owner-line">
+              <span>
+                Owner: {doc.ownerName}
+                {doc.role === "owner" ? " (you)" : ""}
+              </span>
+              <span className="badge">{doc.role === "owner" ? "Owner" : "Can edit"}</span>
             </p>
+          </div>
+          <div className="doc-actions">
+            <p className="save-state" data-save-state={status.kind} aria-live="polite">
+              {status.kind === "saved" ? (
+                <>
+                  Saved <LocalTime iso={status.updatedAt} />
+                </>
+              ) : (
+                statusText
+              )}
+            </p>
+            <button
+              type="button"
+              className="button button-secondary"
+              disabled={!editor || status.kind === "conflict"}
+              onClick={() => {
+                if (statusRef.current.kind === "conflict") return;
+                dirtyRef.current = true;
+                setUnsavedWork(true);
+                void saveRef.current();
+              }}
+            >
+              Save
+            </button>
             {doc.canShare ? (
               <button type="button" className="button" onClick={() => setShareOpen(true)}>
                 Share
@@ -198,34 +237,6 @@ export function DocumentEditor({
             ) : null}
           </div>
         </div>
-        {doc.canRename ? (
-          <>
-            <label className="title-label" htmlFor="document-title">
-              Title
-            </label>
-            <input
-              id="document-title"
-              className="title-input"
-              value={title}
-              maxLength={120}
-              onChange={(event) => {
-                titleRef.current = event.target.value;
-                setTitle(event.target.value);
-                markDirty();
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <p className="title-label">Title</p>
-            <h1 className="title-display">{doc.title}</h1>
-          </>
-        )}
-        <p className="hint permission-note">
-          {doc.canShare
-            ? "You own this document. Sharing lets another demo user edit the text."
-            : `Shared by ${doc.ownerName}. You can edit the text. Only the owner can rename it or change access.`}
-        </p>
         {status.kind === "conflict" ? (
           <div className="banner banner-warning" role="alert">
             <p>{status.message}</p>
@@ -258,6 +269,7 @@ export function DocumentEditor({
             </button>
           </div>
         ) : null}
+        <Toolbar editor={editor} />
         <div className="editor">
           {editor ? <EditorContent editor={editor} /> : <p className="hint">Opening the document…</p>}
         </div>
@@ -276,51 +288,99 @@ export function DocumentEditor({
   );
 }
 
-function Toolbar({ editor, onSave }: { editor: Editor | null; onSave: () => void }) {
+function Toolbar({ editor }: { editor: Editor | null }) {
   function run(command: (current: Editor) => void) {
     if (!editor) return;
     command(editor);
   }
 
+  const block = editor?.isActive("heading", { level: 1 })
+    ? "h1"
+    : editor?.isActive("heading", { level: 2 })
+      ? "h2"
+      : "paragraph";
+
   return (
     <div className="toolbar" role="toolbar" aria-label="Formatting">
-      <ToolButton label="Bold" pressed={Boolean(editor?.isActive("bold"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleBold().run())} />
-      <ToolButton label="Italic" pressed={Boolean(editor?.isActive("italic"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleItalic().run())} />
-      <ToolButton label="Underline" pressed={Boolean(editor?.isActive("underline"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleUnderline().run())} />
-      <ToolButton label="H1" pressed={Boolean(editor?.isActive("heading", { level: 1 }))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleHeading({ level: 1 }).run())} />
-      <ToolButton label="H2" pressed={Boolean(editor?.isActive("heading", { level: 2 }))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleHeading({ level: 2 }).run())} />
-      <ToolButton label="Paragraph" pressed={Boolean(editor?.isActive("paragraph"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().setParagraph().run())} />
-      <ToolButton label="List" pressed={Boolean(editor?.isActive("bulletList"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleBulletList().run())} />
-      <ToolButton label="Numbered" pressed={Boolean(editor?.isActive("orderedList"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleOrderedList().run())} />
-      <ToolButton label="Undo" disabled={!editor || !editor.can().undo()} onClick={() => run((current) => current.chain().focus().undo().run())} />
-      <ToolButton label="Redo" disabled={!editor || !editor.can().redo()} onClick={() => run((current) => current.chain().focus().redo().run())} />
-      <ToolButton label="Save" disabled={!editor} onClick={onSave} />
+      <div className="tool-group" role="group" aria-label="Marks">
+        <ToolButton label="Bold" className="tool tool-strong" pressed={Boolean(editor?.isActive("bold"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleBold().run())}>
+          B
+        </ToolButton>
+        <ToolButton label="Italic" className="tool tool-italic" pressed={Boolean(editor?.isActive("italic"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleItalic().run())}>
+          I
+        </ToolButton>
+        <ToolButton label="Underline" className="tool tool-underline" pressed={Boolean(editor?.isActive("underline"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleUnderline().run())}>
+          U
+        </ToolButton>
+      </div>
+      <span className="tool-sep" aria-hidden="true" />
+      <label className="style-select">
+        <span className="sr-only">Text style</span>
+        <select
+          aria-label="Text style"
+          value={block}
+          disabled={!editor}
+          onChange={(event) => {
+            const value = event.target.value;
+            if (value === "h1") run((current) => current.chain().focus().setHeading({ level: 1 }).run());
+            else if (value === "h2") run((current) => current.chain().focus().setHeading({ level: 2 }).run());
+            else run((current) => current.chain().focus().setParagraph().run());
+          }}
+        >
+          <option value="paragraph">Paragraph</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+        </select>
+      </label>
+      <span className="tool-sep" aria-hidden="true" />
+      <div className="tool-group" role="group" aria-label="Lists">
+        <ToolButton label="Bulleted list" className="tool" pressed={Boolean(editor?.isActive("bulletList"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleBulletList().run())}>
+          Bullets
+        </ToolButton>
+        <ToolButton label="Numbered list" className="tool" pressed={Boolean(editor?.isActive("orderedList"))} disabled={!editor} onClick={() => run((current) => current.chain().focus().toggleOrderedList().run())}>
+          Numbers
+        </ToolButton>
+      </div>
+      <span className="tool-sep" aria-hidden="true" />
+      <div className="tool-group" role="group" aria-label="History">
+        <ToolButton label="Undo" className="tool" disabled={!editor || !editor.can().undo()} onClick={() => run((current) => current.chain().focus().undo().run())}>
+          Undo
+        </ToolButton>
+        <ToolButton label="Redo" className="tool" disabled={!editor || !editor.can().redo()} onClick={() => run((current) => current.chain().focus().redo().run())}>
+          Redo
+        </ToolButton>
+      </div>
     </div>
   );
 }
 
 function ToolButton({
   label,
+  className,
   pressed,
   disabled,
   onClick,
+  children,
 }: {
   label: string;
+  className: string;
   pressed?: boolean;
   disabled?: boolean;
   onClick: () => void;
+  children: string;
 }) {
   return (
     <button
       type="button"
-      className={label === "Save" ? "button" : "tool"}
+      className={className}
       aria-pressed={pressed}
-      aria-label={label === "H1" ? "Heading 1" : label === "H2" ? "Heading 2" : label === "List" ? "Bulleted list" : label}
+      aria-label={label}
+      title={label}
       disabled={disabled}
       onMouseDown={(event) => event.preventDefault()}
       onClick={onClick}
     >
-      {label}
+      {children}
     </button>
   );
 }

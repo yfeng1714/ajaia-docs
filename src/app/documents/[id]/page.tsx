@@ -34,8 +34,8 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
           It may not exist, or {user.displayName} doesn&apos;t have access. Choose another demo user, or return to the
           library.
         </p>
-        <Link className="button" href="/">
-          Back to documents
+        <Link className="back-link" href="/">
+          ← All documents
         </Link>
       </section>
     );
